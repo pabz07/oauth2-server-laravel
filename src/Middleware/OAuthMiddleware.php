@@ -40,11 +40,11 @@ class OAuthMiddleware
      * Create a new oauth middleware instance.
      *
      * @param \LucaDegasperi\OAuth2Server\Authorizer $authorizer
-     * @param bool $httpHeadersOnly
+     * @param bool                                   $httpHeadersOnly
      */
     public function __construct(Authorizer $authorizer, $httpHeadersOnly = false)
     {
-        $this->authorizer = $authorizer;
+        $this->authorizer      = $authorizer;
         $this->httpHeadersOnly = $httpHeadersOnly;
     }
 
@@ -52,8 +52,8 @@ class OAuthMiddleware
      * Handle an incoming request.
      *
      * @param \Illuminate\Http\Request $request
-     * @param \Closure $next
-     * @param string|null $scopesString
+     * @param \Closure                 $next
+     * @param string|null              $scopesString
      *
      * @throws \League\OAuth2\Server\Exception\InvalidScopeException
      *
@@ -69,7 +69,9 @@ class OAuthMiddleware
 
         $this->authorizer->setRequest($request);
 
-        $this->authorizer->validateAccessToken($this->httpHeadersOnly);
+        $validated = $this->authorizer->validateAccessToken($this->httpHeadersOnly);
+        if ($validated)
+            \Auth::onceUsingId($this->authorizer->getAccessToken()->getSession()->getOwnerId());
         $this->validateScopes($scopes);
 
         return $next($request);
