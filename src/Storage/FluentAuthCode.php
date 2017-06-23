@@ -32,9 +32,9 @@ class FluentAuthCode extends AbstractFluentAdapter implements AuthCodeInterface
      */
     public function get($code)
     {
-        $result = $this->getConnection()->table('oauth_auth_codes')
-            ->where('oauth_auth_codes.id', $code)
-            ->where('oauth_auth_codes.expire_time', '>=', time())
+        $result = $this->getConnection()->table($this->authCodeTableName)
+            ->where("{$this->authCodeTableName}.id", $code)
+            ->where("{$this->authCodeTableName}.expire_time", ">=", time())
             ->first();
 
         if (is_null($result)) {
@@ -56,18 +56,18 @@ class FluentAuthCode extends AbstractFluentAdapter implements AuthCodeInterface
      */
     public function getScopes(AuthCodeEntity $token)
     {
-        $result = $this->getConnection()->table('oauth_auth_code_scopes')
-            ->select('oauth_scopes.*')
-            ->join('oauth_scopes', 'oauth_auth_code_scopes.scope_id', '=', 'oauth_scopes.id')
-            ->where('oauth_auth_code_scopes.auth_code_id', $token->getId())
+        $result = $this->getConnection()->table($this->authCodeScopeTableName)
+            ->select("{$this->authCodeTableName}.*")
+            ->join($this->authCodeTableName, "{$this->authCodeScopeTableName}.scope_id", "=", "{$this->authCodeTableName}.id")
+            ->where("{$this->authCodeScopeTableName}.auth_code_id", $token->getId())
             ->get();
 
         $scopes = [];
 
         foreach ($result as $scope) {
             $scopes[] = (new ScopeEntity($this->getServer()))->hydrate([
-               'id' => $scope->id,
-                'description' => $scope->description,
+               "id" => $scope->id,
+                "description" => $scope->description,
             ]);
         }
 
@@ -84,11 +84,11 @@ class FluentAuthCode extends AbstractFluentAdapter implements AuthCodeInterface
      */
     public function associateScope(AuthCodeEntity $token, ScopeEntity $scope)
     {
-        $this->getConnection()->table('oauth_auth_code_scopes')->insert([
-            'auth_code_id' => $token->getId(),
-            'scope_id' => $scope->getId(),
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
+        $this->getConnection()->table($this->authCodeScopeTableName)->insert([
+            "auth_code_id" => $token->getId(),
+            "scope_id" => $scope->getId(),
+            "created_at" => Carbon::now(),
+            "updated_at" => Carbon::now(),
         ]);
     }
 
@@ -101,8 +101,8 @@ class FluentAuthCode extends AbstractFluentAdapter implements AuthCodeInterface
      */
     public function delete(AuthCodeEntity $token)
     {
-        $this->getConnection()->table('oauth_auth_codes')
-        ->where('oauth_auth_codes.id', $token->getId())
+        $this->getConnection()->table($this->authCodeTableName)
+        ->where("{$this->authCodeTableName}.id", $token->getId())
         ->delete();
     }
 
@@ -118,13 +118,13 @@ class FluentAuthCode extends AbstractFluentAdapter implements AuthCodeInterface
      */
     public function create($token, $expireTime, $sessionId, $redirectUri)
     {
-        $this->getConnection()->table('oauth_auth_codes')->insert([
-            'id' => $token,
-            'session_id' => $sessionId,
-            'redirect_uri' => $redirectUri,
-            'expire_time' => $expireTime,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
+        $this->getConnection()->table($this->authCodeTableName)->insert([
+            "id" => $token,
+            "session_id" => $sessionId,
+            "redirect_uri" => $redirectUri,
+            "expire_time" => $expireTime,
+            "created_at" => Carbon::now(),
+            "updated_at" => Carbon::now(),
         ]);
     }
 }

@@ -103,23 +103,23 @@ class FluentScope extends AbstractFluentAdapter implements ScopeInterface
      * @param string $grantType The grant type used in the request (default = "null")
      * @param string $clientId The client id used for the request (default = "null")
      *
-     * @return \League\OAuth2\Server\Entity\ScopeEntity|null If the scope doesn't exist return false
+     * @return \League\OAuth2\Server\Entity\ScopeEntity|null If the scope doesn"t exist return false
      */
     public function get($scope, $grantType = null, $clientId = null)
     {
-        $query = $this->getConnection()->table('oauth_scopes')
-                    ->select('oauth_scopes.id as id', 'oauth_scopes.description as description')
-                    ->where('oauth_scopes.id', $scope);
+        $query = $this->getConnection()->table($this->scopeTableName)
+                    ->select("{$this->scopeTableName}.id as id", "{$this->scopeTableName}.description as description")
+                    ->where("{$this->scopeTableName}.id", $scope);
 
         if ($this->limitClientsToScopes === true && !is_null($clientId)) {
-            $query = $query->join('oauth_client_scopes', 'oauth_scopes.id', '=', 'oauth_client_scopes.scope_id')
-                           ->where('oauth_client_scopes.client_id', $clientId);
+            $query = $query->join($this->clientScopeTableName, "{$this->scopeTableName}.id", "=", "{$this->clientScopeTableName}.scope_id")
+                           ->where("{$this->clientScopeTableName}.client_id", $clientId);
         }
 
         if ($this->limitScopesToGrants === true && !is_null($grantType)) {
-            $query = $query->join('oauth_grant_scopes', 'oauth_scopes.id', '=', 'oauth_grant_scopes.scope_id')
-                           ->join('oauth_grants', 'oauth_grants.id', '=', 'oauth_grant_scopes.grant_id')
-                           ->where('oauth_grants.id', $grantType);
+            $query = $query->join($this->grantScopeTableName, "{$this->scopeTableName}.id", "=", "{$this->grantScopeTableName}.scope_id")
+                           ->join($this->grantTableName, "{$this->grantTableName}.id", "=", "{$this->grantScopeTableName}.grant_id")
+                           ->where("{$this->grantTableName}.id", $grantType);
         }
 
         $result = $query->first();
@@ -130,8 +130,8 @@ class FluentScope extends AbstractFluentAdapter implements ScopeInterface
 
         $scope = new ScopeEntity($this->getServer());
         $scope->hydrate([
-            'id' => $result->id,
-            'description' => $result->description,
+            "id" => $result->id,
+            "description" => $result->description,
         ]);
 
         return $scope;

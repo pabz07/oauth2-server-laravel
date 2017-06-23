@@ -78,40 +78,40 @@ class FluentClient extends AbstractFluentAdapter implements ClientInterface
         $query = null;
 
         if (!is_null($redirectUri) && is_null($clientSecret)) {
-            $query = $this->getConnection()->table('oauth_clients')
+            $query = $this->getConnection()->table($this->clientTableName)
                    ->select(
-                       'oauth_clients.id as id',
-                       'oauth_clients.secret as secret',
-                       'oauth_client_endpoints.redirect_uri as redirect_uri',
-                       'oauth_clients.name as name')
-                   ->join('oauth_client_endpoints', 'oauth_clients.id', '=', 'oauth_client_endpoints.client_id')
-                   ->where('oauth_clients.id', $clientId)
-                   ->where('oauth_client_endpoints.redirect_uri', $redirectUri);
+                       "{$this->clientTableName}.id as id",
+                       "{$this->clientTableName}.secret as secret",
+                       "{$this->clientEndpointTableName}.redirect_uri as redirect_uri",
+                       "{$this->clientTableName}.name as name")
+                   ->join("{$this->clientEndpointTableName}", "{$this->clientTableName}.id", "=", "{$this->clientEndpointTableName}.client_id")
+                   ->where("{$this->clientTableName}.id", $clientId)
+                   ->where("{$this->clientEndpointTableName}.redirect_uri", $redirectUri);
         } elseif (!is_null($clientSecret) && is_null($redirectUri)) {
-            $query = $this->getConnection()->table('oauth_clients')
+            $query = $this->getConnection()->table($this->clientTableName)
                    ->select(
-                       'oauth_clients.id as id',
-                       'oauth_clients.secret as secret',
-                       'oauth_clients.name as name')
-                   ->where('oauth_clients.id', $clientId)
-                   ->where('oauth_clients.secret', $clientSecret);
+                       "{$this->clientTableName}.id as id",
+                       "{$this->clientTableName}.secret as secret",
+                       "{$this->clientTableName}.name as name")
+                   ->where("{$this->clientTableName}.id", $clientId)
+                   ->where("{$this->clientTableName}.secret", $clientSecret);
         } elseif (!is_null($clientSecret) && !is_null($redirectUri)) {
-            $query = $this->getConnection()->table('oauth_clients')
+            $query = $this->getConnection()->table($this->clientTableName)
                    ->select(
-                       'oauth_clients.id as id',
-                       'oauth_clients.secret as secret',
-                       'oauth_client_endpoints.redirect_uri as redirect_uri',
-                       'oauth_clients.name as name')
-                   ->join('oauth_client_endpoints', 'oauth_clients.id', '=', 'oauth_client_endpoints.client_id')
-                   ->where('oauth_clients.id', $clientId)
-                   ->where('oauth_clients.secret', $clientSecret)
-                   ->where('oauth_client_endpoints.redirect_uri', $redirectUri);
+                       "{$this->clientTableName}.id as id",
+                       "{$this->clientTableName}.secret as secret",
+                       "{$this->clientEndpointTableName}.redirect_uri as redirect_uri",
+                       "{$this->clientTableName}.name as name")
+                   ->join($this->clientEndpointTableName, "{$this->clientTableName}.id", "=", "{$this->clientEndpointTableName}.client_id")
+                   ->where("{$this->clientTableName}.id", $clientId)
+                   ->where("{$this->clientTableName}.secret", $clientSecret)
+                   ->where("{$this->clientEndpointTableName}.redirect_uri", $redirectUri);
         }
 
         if ($this->limitClientsToGrants === true && !is_null($grantType)) {
-            $query = $query->join('oauth_client_grants', 'oauth_clients.id', '=', 'oauth_client_grants.client_id')
-                   ->join('oauth_grants', 'oauth_grants.id', '=', 'oauth_client_grants.grant_id')
-                   ->where('oauth_grants.id', $grantType);
+            $query = $query->join($this->clientGrantTableName, "{$this->clientTableName}.id", "=", "{$this->clientGrantTableName}.client_id")
+                   ->join($this->grantTableName, "{$this->grantTableName}.id", "=", "{$this->clientGrantTableName}.grant_id")
+                   ->where("{$this->grantTableName}.id", $grantType);
         }
 
         $result = $query->first();
@@ -132,13 +132,13 @@ class FluentClient extends AbstractFluentAdapter implements ClientInterface
      */
     public function getBySession(SessionEntity $session)
     {
-        $result = $this->getConnection()->table('oauth_clients')
+        $result = $this->getConnection()->table($this->clientTableName)
                 ->select(
-                    'oauth_clients.id as id',
-                    'oauth_clients.secret as secret',
-                    'oauth_clients.name as name')
-                ->join('oauth_sessions', 'oauth_sessions.client_id', '=', 'oauth_clients.id')
-                ->where('oauth_sessions.id', '=', $session->getId())
+                    "{$this->clientTableName}.id as id",
+                    "{$this->clientTableName}.secret as secret",
+                    "{$this->clientTableName}.name as name")
+                ->join($this->sessionTableName, "{$this->sessionTableName}.client_id", "=", "{$this->clientTableName}.id")
+                ->where("{$this->sessionTableName}.id", "=", $session->getId())
                 ->first();
 
         if (is_null($result)) {
@@ -151,20 +151,20 @@ class FluentClient extends AbstractFluentAdapter implements ClientInterface
     /**
      * Create a new client.
      *
-     * @param string $name The client's unique name
-     * @param string $id The client's unique id
-     * @param string $secret The clients' unique secret
+     * @param string $name The client"s unique name
+     * @param string $id The client"s unique id
+     * @param string $secret The clients" unique secret
      *
      * @return string
      */
     public function create($name, $id, $secret)
     {
-        return $this->getConnection()->table('oauth_clients')->insertGetId([
-            'id' => $id,
-            'name' => $name,
-            'secret' => $secret,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
+        return $this->getConnection()->table($this->clientTableName)->insertGetId([
+            "id" => $id,
+            "name" => $name,
+            "secret" => $secret,
+            "created_at" => Carbon::now(),
+            "updated_at" => Carbon::now(),
         ]);
     }
 
@@ -179,10 +179,10 @@ class FluentClient extends AbstractFluentAdapter implements ClientInterface
     {
         $client = new ClientEntity($this->getServer());
         $client->hydrate([
-            'id' => $result->id,
-            'name' => $result->name,
-            'secret' => $result->secret,
-            'redirectUri' => (isset($result->redirect_uri) ? $result->redirect_uri : null),
+            "id" => $result->id,
+            "name" => $result->name,
+            "secret" => $result->secret,
+            "redirectUri" => (isset($result->redirect_uri) ? $result->redirect_uri : null),
         ]);
 
         return $client;

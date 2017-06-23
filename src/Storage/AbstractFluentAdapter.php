@@ -21,6 +21,21 @@ use League\OAuth2\Server\Storage\AbstractStorage;
  */
 abstract class AbstractFluentAdapter extends AbstractStorage
 {
+    protected $accessTokenTableName;
+    protected $accessTokenScopeTableName;
+    protected $scopeTableName;
+    protected $grantTableName;
+    protected $grantScopeTableName;
+    protected $clientTableName;
+    protected $clientEndpointTableName;
+    protected $clientScopeTableName;
+    protected $clientGrantTableName;
+    protected $sessionTableName;
+    protected $sessionScopeTableName;
+    protected $authCodeTableName;
+    protected $authCodeScopeTableName;
+    protected $refreshTokenTableName;
+
     /**
      * The connection resolver instance.
      *
@@ -42,6 +57,22 @@ abstract class AbstractFluentAdapter extends AbstractStorage
      */
     public function __construct(Resolver $resolver)
     {
+        $prefix = env("OAUTH_TABLE_PREFIX", "luca_");
+        $this->accessTokenTableName = "{$prefix}oauth_access_tokens";
+        $this->accessTokenScopeTableName = "{$prefix}oauth_access_token_scopes";
+        $this->scopeTableName = "{$prefix}oauth_scopes";
+        $this->grantTableName = "{$prefix}oauth_grants";
+        $this->grantScopeTableName = "{$prefix}oauth_grant_scopes";
+        $this->clientTableName = "{$prefix}oauth_clients";
+        $this->clientEndpointTableName = "{$prefix}oauth_client_endpoints";
+        $this->clientScopeTableName = "{$prefix}oauth_client_scopes";
+        $this->clientGrantTableName = "{$prefix}oauth_client_grants";
+        $this->sessionTableName = "{$prefix}oauth_sessions";
+        $this->sessionScopeTableName = "{$prefix}oauth_session_scopes";
+        $this->authCodeTableName = "{$prefix}oauth_auth_codes";
+        $this->authCodeScopeTableName = "{$prefix}oauth_auth_code_scopes";
+        $this->refreshTokenTableName = "{$prefix}oauth_refresh_tokens";
+
         $this->resolver = $resolver;
         $this->connectionName = null;
     }
